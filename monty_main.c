@@ -1,58 +1,51 @@
 #include "monty.h"
+#include <stdio.h>
+#define _GNU_SOURCE
+#include <stdlib.h>
+
+bus_t bus = {NULL, NULL, NULL, 0};
 
 /**
-* f_pop - function that prints the top of the stack
-* @head: double head pointer to the stack
-* @counter: line count
+* main - function for monty code interpreter
+* @argc: argument count
+* @argv: argument value
 *
-* Return: nothing
+* Return: 0 on success
 */
-void f_pop(stack_t **head, unsigned int counter)
+int main(int argc, char *argv[])
 {
-	stack_t *h;
+	char *content;
+	FILE *file;
+	size_t size = 0;
+	ssize_t read_line = 1;
+	stack_t *stack = NULL;
+	unsigned int counter = 0;
 
-	if (*head == NULL)
+	if (argc != 2)
 	{
-		fprintf(stderr, "L%d: can't pop an empty stack\n", counter);
-		fclose(bus.file);
-		free(bus.content);
-		free_stack(*head);
+		fprintf(stderr, "USAGE: monty file\n");
 		exit(EXIT_FAILURE);
 	}
-	h = *head;
-	*head = h->next;
-	free(h);
-}
-
-/**
-* f_pint - function that prints the top of the stack
-* @head: double head pointer to the stack
-* @counter: line count
-*
-* Return: nothing
-*/
-void f_pint(stack_t **head, unsigned int counter)
-{
-	if (*head == NULL)
+	file = fopen(argv[1], "r");
+	bus.file = file;
+	if (!file)
 	{
-		fprintf(stderr, "L%u: can't pint, stack empty\n", counter);
-		fclose(bus.file);
-		free(bus.content);
-		free_stack(*head);
+		fprintf(stderr, "Error: Can't open file %s\n", argv[1]);
 		exit(EXIT_FAILURE);
 	}
-	printf("%d\n", (*head)->n);
-}
-
-/**
-* f_nop - function that does nothing
-* @head: double head pointer to the stack
-* @counter: line count
-*
-* Return: nothing
-*/
-void f_nop(stack_t **head, unsigned int counter)
-{
-	(void) counter;
-	(void) head;
+	while (read_line > 0)
+	{
+		content = NULL;
+		read_line = getline(&content, &size, file);
+		bus.content = content;
+		counter++;
+		if (read_line > 0)
+		{
+			execute(content, &stack, counter, file);
+		}
+		free(content);
+	}
+	free_stack(stack);
+	fclose(file);
+return (0);
 }
